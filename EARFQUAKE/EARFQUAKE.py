@@ -405,7 +405,210 @@ elif st.session_state.page_selection == "machine_learning":
     st.header("🤖 Machine Learning")
 
     # Add your machine learning code here
+#Actual vs. Predicted Magnitude Plot
+    import streamlit as st
+    import matplotlib.pyplot as plt
+    from sklearn.model_selection import train_test_split
+    from sklearn.linear_model import LinearRegression
+    from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 
+# Assuming df is defined and available
+
+    regression_features = ["latitude", "longitude", "depth", "felt", "mmi", "gap", "rms"]
+    df_cleaned = df[regression_features + ["magnitude"]].dropna()
+
+    X = df_cleaned[regression_features]  # Features
+    y = df_cleaned["magnitude"]  # Target variable
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    linear_regressor = LinearRegression()
+    linear_regressor.fit(X_train, y_train)
+
+    y_pred = linear_regressor.predict(X_test)
+
+    mse = mean_squared_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
+
+    st.markdown('## Actual vs. Predicted Magnitude Plot')
+    st.subheader('#### Model Evaluation')
+    st.write(f"1. **Mean Squared Error (MSE): {mse:.4f}**")
+    st.write("   - `MSE` represents the average squared difference between actual and predicted magnitudes.")
+    st.write("   - A `lower MSE` indicates better performance.\n")
+
+    st.write(f"2. **R² Score: {r2:.4f}**")
+    st.write("   - `R²` measures the proportion of the variance in the target variable explained by the model.")
+    st.write("   - R² ranges from `0 to 1`, where 1 indicates perfect predictions.\n")
+
+    st.write(f"3. **Mean Absolute Error (MAE): {mae:.4f}**")
+    st.write("   - `MAE` represents the average absolute difference between actual and predicted magnitudes.")
+    st.write("   - Like MSE, a `lower MAE` indicates better performance.\n")
+
+    # Visualizing the Actual vs Predicted values
+    plt.figure(figsize=(10, 6))
+    plt.scatter(y_test, y_pred, color='blue', alpha=0.6)
+    plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='--')
+    plt.title('Actual vs Predicted Magnitudes')
+    plt.xlabel('Actual Magnitude')
+    plt.ylabel('Predicted Magnitude')
+    plt.grid(True)
+
+    # Display the plot in Streamlit
+    st.pyplot(plt)
+
+    # Random Forest Classifier to Predict Tsunami
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    import streamlit as st
+
+    classification_features = ["latitude", "longitude", "depth", "felt", "mmi", "gap", "rms"]
+    df_classification = df[classification_features + ["tsunami"]].dropna()
+
+    X_class = df_classification[classification_features]
+    y_class = df_classification["tsunami"]
+    X_class_train, X_class_test, y_class_train, y_class_test = train_test_split(X_class, y_class, test_size=0.2, random_state=42)
+
+    classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+    classifier.fit(X_class_train, y_class_train)
+
+    y_class_pred = classifier.predict(X_class_test)
+
+    accuracy = accuracy_score(y_class_test, y_class_pred)
+    class_report = classification_report(y_class_test, y_class_pred)
+
+    st.markdown('## Random Forest Classifier to Predict Tsunami')
+    st.markdown('### Tsunami Prediction Model Evaluation')
+    st.write(f"1. **Accuracy: {accuracy:.4f}**")
+    st.write("   - `Accuracy` indicates the proportion of correct predictions out of the total predictions.\n")
+    st.write("**2. Classification Report:**")
+    st.text(class_report)
+
+    # Confusion Matrix Visualization
+    conf_matrix = confusion_matrix(y_class_test, y_class_pred)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False)
+    plt.title('Confusion Matrix for Tsunami Prediction')
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
+
+    # Display the confusion matrix in Streamlit
+    st.pyplot(plt)
+
+    
+    # K-Nearest Neighbors Classifier for Alert Prediction
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    import streamlit as st
+    from sklearn.preprocessing import LabelEncoder
+    from sklearn.model_selection import train_test_split
+
+    # Assuming `data` is defined and available
+
+    data_alert = df.dropna(subset=["alert"])
+    X_alert = data_alert[["latitude", "longitude", "depth", "mmi", "gap"]]
+    y_alert = data_alert["alert"]
+
+    le = LabelEncoder()
+    y_alert = le.fit_transform(y_alert)
+
+    X_alert_train, X_alert_test, y_alert_train, y_alert_test = train_test_split(X_alert, y_alert, test_size=0.2, random_state=42)
+
+    knn = KNeighborsClassifier(n_neighbors=5)
+    knn.fit(X_alert_train, y_alert_train)
+
+    y_alert_pred = knn.predict(X_alert_test)
+
+    alert_accuracy = accuracy_score(y_alert_test, y_alert_pred)
+    alert_report = classification_report(y_alert_test, y_alert_pred, target_names=le.classes_)
+
+    st.markdown('## K-Nearest Neighbors Classifier for Alert Prediction')
+    st.markdown('#### Alert Prediction Model Evaluation')
+    st.write(f"**1. Accuracy: {alert_accuracy:.4f}**")
+    st.write("   - `Accuracy` indicates the proportion of correct predictions out of the total predictions.\n")
+    st.write("**2. Classification Report:**")
+    st.text(alert_report)
+
+    # Confusion Matrix Visualization
+    conf_matrix_alert = confusion_matrix(y_alert_test, y_alert_pred)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(conf_matrix_alert, annot=True, fmt='d', cmap='Blues', xticklabels=le.classes_, yticklabels=le.classes_)
+    plt.title('Confusion Matrix for Alert Prediction')
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
+
+    # Display the confusion matrix in Streamlit
+    st.pyplot(plt)
+
+    # Means Clustering to Find Patterns
+    from sklearn.cluster import KMeans
+    import matplotlib.pyplot as plt
+    import streamlit as st
+
+    # Assuming `data` is defined and available
+
+    clustering_features = ["latitude", "longitude", "depth", "magnitude"]
+    data_clustering = df[clustering_features].dropna()
+
+    kmeans = KMeans(n_clusters=3, random_state=42)
+    clusters = kmeans.fit_predict(data_clustering)
+    data_clustering_with_clusters = data_clustering.copy()
+    data_clustering_with_clusters["Cluster"] = clusters
+
+    st.markdown('## Means Clustering to Find Patterns')
+    # Plotting the clusters
+    plt.figure(figsize=(10, 6))
+    plt.scatter(data_clustering_with_clusters["latitude"], data_clustering_with_clusters["longitude"], 
+                c=data_clustering_with_clusters["Cluster"], cmap="viridis", alpha=0.6)
+    plt.title("Earthquake Clusters based on Location")
+    plt.xlabel("Latitude")
+    plt.ylabel("Longitude")
+    plt.colorbar(label="Cluster")
+
+    # Display the plot in Streamlit
+    st.pyplot(plt)
+
+
+    # Principal Component Analysis (PCA) for Dimensionality Reduction
+    from sklearn.decomposition import PCA
+    import matplotlib.pyplot as plt
+    import streamlit as st
+
+    # Preprocessing for PCA
+    pca_features = ["latitude", "longitude", "depth", "felt", "mmi", "gap", "rms"]
+    df_pca = df[pca_features].dropna()
+
+    # Applying PCA to reduce to 2 principal components
+    pca = PCA(n_components=2)
+    principal_components = pca.fit_transform(df_pca)
+
+    # Evaluate PCA
+    explained_variance = pca.explained_variance_ratio_
+    cumulative_variance = explained_variance.cumsum()
+
+    # Display the results in Streamlit
+    st.markdown('## Principal Component Analysis (PCA) for Dimensionality Reduction')
+    st.markdown('#### PCA Evaluation')
+    st.write("Explained Variance Ratio for each `Principal Component`:")
+    for i, var in enumerate(explained_variance, 1):
+        st.write(f"  **Principal Component {i}: {var:.4f}**")
+
+    st.write(f"\n**Cumulative Explained Variance for the first 2 components: {cumulative_variance[1]:.4f}**")
+    st.write("   - Measures how much of the `total variance` is retained by the first two components.\n")
+
+    # Visualizing PCA results
+    plt.figure(figsize=(10, 6))
+    plt.scatter(principal_components[:, 0], principal_components[:, 1], alpha=0.6)
+    plt.title("PCA of Earthquake Data")
+    plt.xlabel("Principal Component 1")
+    plt.ylabel("Principal Component 2")
+
+    # Display the plot in Streamlit
+    st.pyplot(plt)
 # Prediction Page
 elif st.session_state.page_selection == "prediction":
     st.header("👀 Prediction")
